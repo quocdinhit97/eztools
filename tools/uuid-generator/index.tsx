@@ -127,7 +127,7 @@ export default function UuidGeneratorTool() {
       {uuids.length === 0 && (
         <div className="rounded-xl border border-dashed border-[var(--color-border-default)] p-12 text-center">
           <Icon
-            name="Fingerprint"
+            name="FingerprintPattern"
             className="mx-auto mb-4 h-12 w-12 text-[var(--color-text-tertiary)]"
           />
           <p className="text-[var(--color-text-secondary)]">

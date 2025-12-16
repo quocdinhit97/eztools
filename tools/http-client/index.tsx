@@ -139,7 +139,7 @@ export default function HttpClientTool() {
             className="gap-2 sm:w-32"
           >
             {loading ? (
-              <Icon name="Loader2" className="h-4 w-4 animate-spin" />
+              <Icon name="Loader" className="h-4 w-4 animate-spin" />
             ) : (
               <Icon name="Send" className="h-4 w-4" />
             )}
@@ -153,7 +153,7 @@ export default function HttpClientTool() {
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/20">
           <div className="flex items-start gap-2">
             <Icon
-              name="AlertCircle"
+              name="CircleAlert"
               className="h-5 w-5 text-[var(--color-accent-error)]"
             />
             <p className="text-sm text-[var(--color-accent-error)]">{error}</p>

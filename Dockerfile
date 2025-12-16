@@ -4,10 +4,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm ci --omit=dev --legacy-peer-deps
+# Install ALL dependencies (including dev dependencies for build)
+RUN npm install
 
 # Stage 2: Builder
 FROM node:23-alpine AS builder
