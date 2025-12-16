@@ -1,7 +1,19 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'standalone', // Required for Docker deployment
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "vietqr.net",
+        pathname: "/portal-service/resources/icons/**"
+      }
+    ]
+  }
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+
+export default withNextIntl(nextConfig);
