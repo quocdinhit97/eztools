@@ -94,6 +94,21 @@ const toolConfigs: ToolConfig[] = [
     enabled: true,
     component: () => import('./qr-generator'),
   },
+  // Traffic Violation Lookup
+  {
+    slug: 'traffic-violation-lookup',
+    i18nKey: 'trafficViolationLookup',
+    category: 'utilities',
+    icon: 'ShieldAlert',
+    gridSize: 'large',
+    isPro: false,
+    hasPreview: false,
+    isPopular: true,
+    keywords: ['traffic', 'violation', 'fine', 'vietnam', 'csgt', 'phat nguoi', 'bien kiem soat'],
+    order: 1,
+    enabled: true,
+    component: () => import('./traffic-violation-lookup'),
+  },
   // IP Lookup
   {
     slug: 'ip-lookup',
