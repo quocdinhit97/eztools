@@ -4,7 +4,8 @@ export type CategorySlug =
   | 'network'
   | 'design'
   | 'text'
-  | 'image';
+  | 'image'
+  | 'utilities';
 
 export interface Category {
   slug: CategorySlug;
@@ -19,6 +20,7 @@ export const categories: Category[] = [
   { slug: 'design', icon: 'Palette', order: 4 },
   { slug: 'text', icon: 'Type', order: 5 },
   { slug: 'image', icon: 'Image', order: 6 },
+  { slug: 'utilities', icon: 'Wrench', order: 7 },
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {
