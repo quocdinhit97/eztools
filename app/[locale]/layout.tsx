@@ -2,6 +2,7 @@ import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Geist, Geist_Mono, Instrument_Serif } from 'next/font/google';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import { routing } from '@/i18n/routing';
 import { Providers } from '@/components/providers/Providers';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -104,6 +105,7 @@ export default async function LocaleLayout({
             </div>
           </Providers>
         </NextIntlClientProvider>
+        <GoogleAnalytics gaId="G-TNXXTD33WN" />
       </body>
     </html>
   );

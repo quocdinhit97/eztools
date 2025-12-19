@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { copyToClipboard } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { trackToolUsage, trackButtonClick, trackCopy, trackFeatureUsage } from '@/lib/analytics';
 
 // Simple UUID v4 generator (no external dependency)
 function generateUUID(): string {
@@ -23,9 +24,15 @@ export default function UuidGeneratorTool() {
   const [count, setCount] = useState(1);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
+  // Track tool usage on mount
+  useEffect(() => {
+    trackToolUsage('uuid-generator');
+  }, []);
+
   const handleGenerate = useCallback(() => {
     const newUuids = Array.from({ length: count }, () => generateUUID());
     setUuids(newUuids);
+    trackButtonClick('generate_uuid', 'uuid-generator', { count });
   }, [count]);
 
   const handleCopy = async (uuid: string, index: number) => {
@@ -33,6 +40,7 @@ export default function UuidGeneratorTool() {
     if (success) {
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
+      trackCopy('uuid', 'uuid-generator', uuid.length);
     }
   };
 
@@ -42,6 +50,7 @@ export default function UuidGeneratorTool() {
     if (success) {
       setCopiedIndex(-1); // Use -1 to indicate "all"
       setTimeout(() => setCopiedIndex(null), 2000);
+      trackCopy('uuid_all', 'uuid-generator', allUuids.length);
     }
   };
 
@@ -59,7 +68,11 @@ export default function UuidGeneratorTool() {
           <select
             id="count"
             value={count}
-            onChange={(e) => setCount(Number(e.target.value))}
+            onChange={(e) => {
+              const newCount = Number(e.target.value);
+              setCount(newCount);
+              trackFeatureUsage('uuid-count', 'change', newCount);
+            }}
             className={cn(
               'rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-input)] px-3 py-2',
               'text-sm text-[var(--color-text-primary)]',

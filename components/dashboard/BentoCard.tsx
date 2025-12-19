@@ -1,10 +1,11 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
+import { trackNavigation } from '@/lib/analytics';
 
 export type BentoSize = 'small' | 'medium' | 'large';
 
@@ -58,6 +59,7 @@ export function BentoCard({
   return (
     <Link
       href={`/tools/${slug}`}
+      onClick={() => trackNavigation(`/tools/${slug}`, 'bento-card', 'click')}
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-card)] p-6',
         'shadow-[var(--shadow-card)] transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5',

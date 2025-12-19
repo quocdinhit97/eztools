@@ -7,6 +7,7 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import { getSortedCategories } from '@/config/categories';
 import { registry } from '@/tools/registry';
 import { cn } from '@/lib/utils';
+import { trackNavigation } from '@/lib/analytics';
 
 export function SidebarCategories() {
   const t = useTranslations('categories');
@@ -63,6 +64,7 @@ export function SidebarCategories() {
                         <Link
                           key={tool.slug}
                           href={`/tools/${tool.slug}`}
+                          onClick={() => trackNavigation(`/tools/${tool.slug}`, 'sidebar-categories', 'click')}
                           className={cn(
                             'flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors',
                             isToolActiveState

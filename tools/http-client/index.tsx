@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
+import { trackToolUsage, trackButtonClick, trackFeatureUsage, trackError } from '@/lib/analytics';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
@@ -25,6 +26,11 @@ export default function HttpClientTool() {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ResponseData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Track tool usage on mount
+  useEffect(() => {
+    trackToolUsage('http-client');
+  }, []);
 
   const handleSend = async () => {
     if (!url.trim()) {
@@ -73,12 +79,17 @@ export default function HttpClientTool() {
         body,
         time,
       });
+      trackButtonClick('send_request', 'http-client', {
+        method,
+        status: res.status,
+        response_time: time,
+      });
     } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : 'Failed to fetch. Check the URL and try again.'
-      );
+      const errorMsg = e instanceof Error
+        ? e.message
+        : 'Failed to fetch. Check the URL and try again.';
+      setError(errorMsg);
+      trackError('http_request_failed', errorMsg, 'http-client');
     } finally {
       setLoading(false);
     }
@@ -98,7 +109,11 @@ export default function HttpClientTool() {
           {/* Method select */}
           <select
             value={method}
-            onChange={(e) => setMethod(e.target.value as HttpMethod)}
+            onChange={(e) => {
+              const newMethod = e.target.value as HttpMethod;
+              setMethod(newMethod);
+              trackFeatureUsage('http-method', 'change', newMethod);
+            }}
             className={cn(
               'rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-input)] px-3 py-2.5',
               'text-sm font-medium text-[var(--color-text-primary)]',

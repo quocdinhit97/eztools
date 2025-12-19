@@ -7,6 +7,7 @@ import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 import { getAllTools } from '@/tools/registry';
 import type { ToolMeta } from '@/tools/types';
+import { trackSearch, trackNavigation } from '@/lib/analytics';
 
 export function SearchBar() {
   const t = useTranslations('common');
@@ -99,6 +100,8 @@ export function SearchBar() {
   const handleToolClick = (tool: ToolMeta) => {
     router.push(`/tools/${tool.slug}`);
     setIsOpen(false);
+    trackSearch(query, 1, 'search-bar');
+    trackNavigation(`/tools/${tool.slug}`, 'search-bar', 'search-result');
     setQuery('');
     setSelectedIndex(0);
   };

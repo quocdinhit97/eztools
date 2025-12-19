@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
@@ -11,6 +11,7 @@ import { TwoPanel, Panel } from '@/components/tools/TwoPanel';
 import { copyToClipboard } from '@/lib/utils';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { trackToolUsage, trackButtonClick, trackCopy, trackFeatureUsage } from '@/lib/analytics';
 
 type SeparatorType = 'none' | 'space' | 'comma' | 'comma-space' | 'semicolon' | 'semicolon-space' | 'custom';
 
@@ -22,6 +23,11 @@ export default function TextToOneLineTool() {
   const [separatorType, setSeparatorType] = useState<SeparatorType>('space');
   const [customSeparator, setCustomSeparator] = useState('');
   const [result, setResult] = useState('');
+
+  // Track tool usage on mount
+  useEffect(() => {
+    trackToolUsage('text-to-one-line');
+  }, []);
 
   const convertToOneLine = (text: string, separator: SeparatorType, custom: string = '') => {
     if (!text.trim()) {
@@ -70,6 +76,7 @@ export default function TextToOneLineTool() {
     setSeparatorType(type);
     const converted = convertToOneLine(inputText, type, customSeparator);
     setResult(converted);
+    trackFeatureUsage('separator', 'change', type);
   };
 
   const handleCustomSeparatorChange = (value: string) => {
@@ -85,6 +92,7 @@ export default function TextToOneLineTool() {
       const text = await navigator.clipboard.readText();
       handleInputChange(text);
       toast.success(tCommon('pasteSuccess'));
+      trackButtonClick('paste', 'text-to-one-line', { length: text.length });
     } catch (err) {
       toast.error(tCommon('pasteFailed'));
     }
@@ -93,12 +101,14 @@ export default function TextToOneLineTool() {
   const handleClear = () => {
     setInputText('');
     setResult('');
+    trackButtonClick('clear', 'text-to-one-line');
   };
 
   const handleCopy = async () => {
     const success = await copyToClipboard(result);
     if (success) {
       toast.success(tCommon('copySuccess'));
+      trackCopy('text', 'text-to-one-line', result.length);
     } else {
       toast.error(tCommon('copyFailed'));
     }

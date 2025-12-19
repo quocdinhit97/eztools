@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Icon } from "@/components/ui/Icon";
@@ -16,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { searchTrafficViolations, type Violation } from "@/app/actions/traffic-violations";
+import { trackToolUsage, trackButtonClick, trackSearch, trackFeatureUsage, trackError } from "@/lib/analytics";
 
 const VEHICLE_TYPES = {
   CAR: "1",
@@ -41,8 +41,14 @@ export default function TrafficViolationLookup() {
   const [vehicleType, setVehicleType] = useState<VehicleType>(VEHICLE_TYPES.MOTORCYCLE);
   const [violations, setViolations] = useState<Violation[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [chooseVehicleType, setChooseVehicleType] = useState<VehicleType>(VEHICLE_TYPES.MOTORCYCLE);
   const [history, setHistory] = useState<SearchHistory[]>([]);
   const [showRegulationsModal, setShowRegulationsModal] = useState(false);
+
+  // Track tool usage on mount
+  useEffect(() => {
+    trackToolUsage('traffic-violation-lookup');
+  }, []);
 
   // Load history from localStorage
   useEffect(() => {
@@ -110,15 +116,20 @@ export default function TrafficViolationLookup() {
 
       setViolations(result.violations || []);
       
+      // Track search
+      trackSearch(licensePlate.trim(), result.violations?.length || 0, 'traffic-violation-lookup');
+      
       // Save to history if violations found - use license plate from API response
       if (result.violations && result.violations.length > 0) {
         // Use the license plate from the first violation result (normalized by API)
         const normalizedPlate = result.violations[0].licensePlate;
         saveToHistory(normalizedPlate, vehicleType, result.violations);
       }
+      setChooseVehicleType(vehicleType);
     } catch (error) {
       console.error("Search error:", error);
       toast.error(t("searchError"));
+      trackError('search_failed', error instanceof Error ? error.message : 'Unknown error', 'traffic-violation-lookup');
     } finally {
       setLoading(false);
     }
@@ -128,12 +139,15 @@ export default function TrafficViolationLookup() {
     setLicensePlate(item.licensePlate);
     setVehicleType(item.vehicleType);
     setViolations(item.violations);
+    setChooseVehicleType(item.vehicleType);
+    trackButtonClick('load_from_history', 'traffic-violation-lookup', { plate: item.licensePlate });
   };
 
   const clearHistory = () => {
     setHistory([]);
     localStorage.removeItem(HISTORY_KEY);
     toast.success(t("clearHistory"));
+    trackButtonClick('clear_history', 'traffic-violation-lookup');
   };
 
   const formatDate = (timestamp: number) => {
@@ -155,7 +169,10 @@ export default function TrafficViolationLookup() {
         </h3>
         <div className="flex gap-2">
             <button
-              onClick={() => setVehicleType(VEHICLE_TYPES.CAR)}
+              onClick={() => {
+                setVehicleType(VEHICLE_TYPES.CAR);
+                trackFeatureUsage('vehicle-type', 'select', 'car');
+              }}
               className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-all font-medium text-sm ${
                 vehicleType === VEHICLE_TYPES.CAR
                   ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400"
@@ -166,7 +183,10 @@ export default function TrafficViolationLookup() {
               <span>{t("car")}</span>
             </button>
             <button
-              onClick={() => setVehicleType(VEHICLE_TYPES.MOTORCYCLE)}
+              onClick={() => {
+                setVehicleType(VEHICLE_TYPES.MOTORCYCLE);
+                trackFeatureUsage('vehicle-type', 'select', 'motorcycle');
+              }}
               className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-all font-medium text-sm ${
                 vehicleType === VEHICLE_TYPES.MOTORCYCLE
                   ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400"
@@ -177,7 +197,10 @@ export default function TrafficViolationLookup() {
               <span>{t("motorcycle")}</span>
             </button>
             <button
-              onClick={() => setVehicleType(VEHICLE_TYPES.ELECTRIC_BIKE)}
+              onClick={() => {
+                setVehicleType(VEHICLE_TYPES.ELECTRIC_BIKE);
+                trackFeatureUsage('vehicle-type', 'select', 'electric-bike');
+              }}
               className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition-all font-medium text-sm ${
                 vehicleType === VEHICLE_TYPES.ELECTRIC_BIKE
                   ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400"
@@ -334,11 +357,11 @@ export default function TrafficViolationLookup() {
                             {violation.licensePlate}
                           </span>
                         </div>
-                        {vehicleType === VEHICLE_TYPES.CAR ? (
+                        { chooseVehicleType === VEHICLE_TYPES.CAR ? (
                           <div className="bg-orange-50 dark:bg-orange-950/20 p-2 rounded-lg">
                             <Icon name="Car" className="size-6 text-orange-600 dark:text-orange-400" />
                           </div>
-                        ) : vehicleType === VEHICLE_TYPES.ELECTRIC_BIKE ? (
+                        ) : chooseVehicleType === VEHICLE_TYPES.ELECTRIC_BIKE ? (
                           <div className="bg-orange-50 dark:bg-orange-950/20 p-2 rounded-lg">
                             <Icon name="Bike" className="size-6 text-orange-600 dark:text-orange-400" />
                           </div>
@@ -415,7 +438,10 @@ export default function TrafficViolationLookup() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowRegulationsModal(true)}
+                onClick={() => {
+                  setShowRegulationsModal(true);
+                  trackButtonClick('view_regulations', 'traffic-violation-lookup');
+                }}
                 className="w-full border-orange-300 dark:border-orange-800 text-orange-700 dark:text-orange-500 hover:bg-orange-100 dark:hover:bg-orange-900/30 text-xs font-medium h-9"
               >
                 <Icon name="FileText" className="mr-1.5 h-3.5 w-3.5" />

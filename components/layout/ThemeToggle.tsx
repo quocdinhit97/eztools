@@ -4,6 +4,7 @@ import { useTheme } from 'next-themes';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { trackFeatureUsage } from '@/lib/analytics';
 
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -16,13 +17,18 @@ export function ThemeToggle() {
 
   const toggleTheme = () => {
     // Cycle through: light -> dark -> system -> light
+    let newTheme: string;
     if (theme === 'light') {
+      newTheme = 'dark';
       setTheme('dark');
     } else if (theme === 'dark') {
+      newTheme = 'system';
       setTheme('system');
     } else {
+      newTheme = 'light';
       setTheme('light');
     }
+    trackFeatureUsage('theme', 'change', newTheme);
   };
 
   if (!mounted) {

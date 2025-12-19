@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { BentoSection } from '@/components/ui/BentoSection';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { trackToolUsage, trackButtonClick, trackSearch, trackError } from '@/lib/analytics';
 
 interface IPLocation {
   ip: string;
@@ -59,6 +60,7 @@ export default function IPLookupTool() {
 
   // Fetch user's IP on mount
   useEffect(() => {
+    trackToolUsage('ip-lookup');
     fetchIPData();
   }, []);
 
@@ -75,13 +77,16 @@ export default function IPLookupTool() {
           // Auto-fill search input with user's IP
           setSearchIP(data.ip);
         }
+        trackSearch(ip || 'my-ip', undefined, 'ip-lookup');
       } else {
         toast.error(t('invalidIP'));
         setIpData(null);
+        trackError('invalid_ip', 'IP lookup failed', 'ip-lookup');
       }
     } catch (error) {
       toast.error(t('fetchError'));
       console.error('Error fetching IP data:', error);
+      trackError('fetch_failed', error instanceof Error ? error.message : 'Unknown error', 'ip-lookup');
     } finally {
       setLoading(false);
       setInitialLoading(false);
@@ -93,6 +98,7 @@ export default function IPLookupTool() {
       toast.error(t('enterIP'));
       return;
     }
+    trackButtonClick('search_ip', 'ip-lookup', { ip: searchIP.trim() });
     fetchIPData(searchIP.trim());
   };
 

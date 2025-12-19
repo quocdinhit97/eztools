@@ -19,6 +19,7 @@ import { QRPay } from 'vietnam-qr-pay';
 import Image from 'next/image';
 import QrScanner from 'qr-scanner';
 import html2canvas from 'html2canvas';
+import { trackToolUsage, trackButtonClick, trackCopy, trackDownload, trackFeatureUsage, trackError } from '@/lib/analytics';
 
 interface QRData {
   bankCode: string;
@@ -43,6 +44,11 @@ export default function VietQRGeneratorTool() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showRawData, setShowRawData] = useState(false);
   const phoneMockupRef = useRef<HTMLDivElement>(null);
+
+  // Track tool usage on mount
+  useEffect(() => {
+    trackToolUsage('vietqr-generator');
+  }, []);
 
   const selectedBank = BANKS.find((b) => b.code === bankCode);
   
@@ -128,6 +134,7 @@ export default function VietQRGeneratorTool() {
       accountName,
       note,
     });
+    trackButtonClick('generate_vietqr', 'vietqr-generator', { bank: bankCode, hasAmount: !!amount });
   }, [bankCode, accountNumber, amount, note, selectedBank, accountName, generateQRCode, t]);
 
   const handleClear = () => {
@@ -138,6 +145,7 @@ export default function VietQRGeneratorTool() {
     setAccountName('');
     setQrData(null);
     setVietQRString('');
+    trackButtonClick('clear', 'vietqr-generator');
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -226,15 +234,18 @@ export default function VietQRGeneratorTool() {
         }
 
         toast.success(t('qrScanSuccess'));
+        trackFeatureUsage('vietqr-scan', 'success');
 
       } catch (parseError) {
         console.error('VietQR parse error:', parseError);
         toast.error(t('qrParseError'));
+        trackError('vietqr_parse_failed', parseError instanceof Error ? parseError.message : 'Parse error', 'vietqr-generator');
       }
 
     } catch (error) {
       console.error('QR scan error:', error);
       toast.error(t('qrScanFailed'));
+      trackError('qr_scan_failed', error instanceof Error ? error.message : 'Scan error', 'vietqr-generator');
     }
   };
 
@@ -257,6 +268,7 @@ export default function VietQRGeneratorTool() {
           link.download = `vietqr-${qrData.bankCode}-${qrData.accountNumber}.png`;
           link.click();
           URL.revokeObjectURL(url);
+          trackDownload('png', `vietqr-${qrData.bankCode}.png`, blob.size);
         }
       });
     } catch (error) {
@@ -285,6 +297,7 @@ export default function VietQRGeneratorTool() {
               }),
             ]);
             toast.success(t('copiedSuccess'));
+            trackCopy('vietqr-image', 'vietqr-generator', blob.size);
           } catch (err) {
             console.error('Clipboard error:', err);
             toast.error(t('copyFailed'));
@@ -321,6 +334,7 @@ export default function VietQRGeneratorTool() {
                 title: 'VietQR',
                 text: `VietQR - ${qrData.bankName} - ${qrData.accountNumber}`,
               });
+              trackButtonClick('share_vietqr', 'vietqr-generator');
             } else {
               // Fallback: download if share is not supported
               const url = URL.createObjectURL(blob);
