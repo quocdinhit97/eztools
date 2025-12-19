@@ -3,6 +3,7 @@
 import { type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from './ThemeProvider';
+import { AnalyticsProvider } from './AnalyticsProvider';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -11,13 +12,15 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider>
-      {children}
-      <Toaster
-        position="bottom-right"
-        expand={false}
-        richColors
-        closeButton
-      />
+      <AnalyticsProvider>
+        {children}
+        <Toaster
+          position="bottom-right"
+          expand={false}
+          richColors
+          closeButton
+        />
+      </AnalyticsProvider>
     </ThemeProvider>
   );
 }

@@ -11,6 +11,7 @@ import { BentoSection } from '@/components/ui/BentoSection';
 import { TwoPanel, Panel } from '@/components/tools/TwoPanel';
 import { copyToClipboard, downloadFile, readFileAsText } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { trackToolUsage, trackButtonClick, trackCopy, trackDownload, trackFeatureUsage } from '@/lib/analytics';
 
 // Dynamic import to avoid SSR issues
 const JsonView = dynamic(() => import('@uiw/react-json-view'), { ssr: false });
@@ -27,6 +28,11 @@ export default function JsonFormatterTool() {
   const [activeMode, setActiveMode] = useState<FormatMode>('format');
   const [copied, setCopied] = useState(false);
   const [collapsed, setCollapsed] = useState<number>(2);
+
+  // Track tool usage on mount
+  useEffect(() => {
+    trackToolUsage('json-formatter');
+  }, []);
 
   const processJson = useCallback(
     (mode: FormatMode, jsonString: string) => {
@@ -82,11 +88,13 @@ export default function JsonFormatterTool() {
   const handleFormat = () => {
     setActiveMode('format');
     processJson('format', input);
+    trackButtonClick('format_json', 'json-formatter');
   };
 
   const handleMinify = () => {
     setActiveMode('minify');
     processJson('minify', input);
+    trackButtonClick('minify_json', 'json-formatter');
   };
 
   const handleValidate = () => {
@@ -103,11 +111,13 @@ export default function JsonFormatterTool() {
         description: 'Your JSON is properly formatted',
       });
       processJson('validate', input);
+      trackButtonClick('validate_json', 'json-formatter', { success: true });
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'Invalid JSON';
       toast.error('Invalid JSON', {
         description: errorMessage,
       });
+      trackButtonClick('validate_json', 'json-formatter', { success: false });
     }
   };
 
@@ -116,14 +126,17 @@ export default function JsonFormatterTool() {
     setOutput('');
     setParsedJson(null);
     setError(null);
+    trackButtonClick('clear', 'json-formatter');
   };
 
   const handleExpandAll = () => {
     setCollapsed(false as any);
+    trackFeatureUsage('json-view', 'expand_all');
   };
 
   const handleCollapseAll = () => {
     setCollapsed(1);
+    trackFeatureUsage('json-view', 'collapse_all');
   };
 
   const handleCopy = async () => {
@@ -133,6 +146,7 @@ export default function JsonFormatterTool() {
         setCopied(true);
         toast.success('Copied to clipboard!');
         setTimeout(() => setCopied(false), 2000);
+        trackCopy('json', 'json-formatter', output.length);
       } else {
         toast.error('Failed to copy');
       }
@@ -142,6 +156,7 @@ export default function JsonFormatterTool() {
   const handleDownload = () => {
     if (output) {
       downloadFile(output, 'formatted.json', 'application/json');
+      trackDownload('json', 'formatted.json', output.length);
     }
   };
 
@@ -153,6 +168,7 @@ export default function JsonFormatterTool() {
         setInput(content);
         processJson(activeMode, content);
         toast.success('File loaded successfully!');
+        trackButtonClick('upload_file', 'json-formatter', { fileSize: file.size });
       } catch {
         setError('Failed to read file');
         toast.error('Failed to read file');

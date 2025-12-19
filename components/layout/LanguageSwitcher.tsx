@@ -6,6 +6,7 @@ import { Icon } from '@/components/ui/Icon';
 import { FlagIcon } from '@/components/ui/FlagIcon';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect } from 'react';
+import { trackFeatureUsage } from '@/lib/analytics';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flagCode: 'uk' as const },
@@ -26,6 +27,7 @@ export function LanguageSwitcher() {
   const handleLanguageChange = (newLocale: string) => {
     router.replace(pathname, { locale: newLocale });
     setIsOpen(false);
+    trackFeatureUsage('language', 'change', newLocale);
   };
 
   // Close dropdown when clicking outside

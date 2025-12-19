@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { generateQRCodeToElement, updateQRCode, generateQRCode, type QRGeneratorOptions } from '../../lib/QrGeneratorUtils';
 import { FileUploadZone } from '@/components/ui/FileUploadZone';
 import Image from 'next/image';
+import { trackToolUsage, trackButtonClick, trackCopy, trackDownload, trackFeatureUsage } from '@/lib/analytics';
 
 type QRSize = 300 | 400 | 500 | 600;
 type DotType = 'rounded' | 'dots' | 'classy' | 'square' | 'extra-rounded' | 'classy-rounded';
@@ -40,6 +41,7 @@ export default function QRGeneratorTool() {
 
   // Load QRCodeStyling library dynamically
   useEffect(() => {
+    trackToolUsage('qr-generator');
     import('qr-code-styling').then((module) => {
       setQRCodeStyling(() => module.default);
     });
@@ -74,6 +76,7 @@ export default function QRGeneratorTool() {
   const handleRemoveLogo = () => {
     setLogoFile(null);
     setLogoDataUrl('');
+    trackButtonClick('remove_logo', 'qr-generator');
   };
 
   // Generate QR code whenever inputs change
@@ -148,6 +151,7 @@ export default function QRGeneratorTool() {
       });
       
       toast.success(t('downloadSuccess'));
+      trackDownload(extension, `qr-code.${extension}`, downloadSize * downloadSize);
     } catch (error) {
       toast.error(t('downloadError'));
     }
@@ -199,6 +203,7 @@ export default function QRGeneratorTool() {
             new ClipboardItem({ 'image/png': blob }),
           ]);
           toast.success(tCommon('copySuccess'));
+          trackCopy('qr-image', 'qr-generator', blob.size);
         } catch (err) {
           toast.error(tCommon('copyFailed'));
         }

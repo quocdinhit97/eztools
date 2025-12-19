@@ -5,6 +5,7 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { mainNavItems } from '@/config/navigation';
 import { cn } from '@/lib/utils';
+import { trackNavigation } from '@/lib/analytics';
 
 export function SidebarNav() {
   const t = useTranslations('nav');
@@ -22,6 +23,7 @@ export function SidebarNav() {
           <Link
             key={item.key}
             href={item.href}
+            onClick={() => trackNavigation(item.href, 'sidebar-nav', 'click')}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
               isActive
